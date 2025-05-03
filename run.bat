@@ -1,0 +1,1 @@
+C:\Users\Andrew\anaconda3\python.exe -i -c "from pf import start; from decimal import Decimal; from shares import Shares; from option import UpgradeTarget; from asset import UNBOUND_SHARES, BOUND_SHARES, HORIZON_SHARES, MANUAL_SHARES; p = start(); a = p.assets[0]; b = p.assets[1]; c = p.assets[2]; d = p.assets[3]; print(p); true = True; false = False;"

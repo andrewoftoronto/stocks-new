@@ -267,7 +267,7 @@ class Asset:
                 urgency = 0.15
         else:
             urgency = 0
-        
+
         return urgency
 
     def u(self, auto_sell=False):

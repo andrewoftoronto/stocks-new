@@ -251,7 +251,7 @@ class Asset:
         ''' A score from 0->1 of how urgent it is to fill the horizon fund. '''
 
         # Urgency to fill up the horizon fund in any form at all.
-        if len(self.shares[HORIZON_SHARES]) < 100:
+        if len(self.shares[HORIZON_SHARES]) < 50:
             return 0.5
 
         horizon_price = ceil(float(self.price) * 1.02)

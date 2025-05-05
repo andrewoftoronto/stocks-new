@@ -250,15 +250,18 @@ class Asset:
     def horizon_urgency(self) -> float:
         ''' A score from 0->1 of how urgent it is to fill the horizon fund. '''
 
-        n_horizon_shares = len(self.shares[HORIZON_SHARES])
-        if n_horizon_shares < 150: 
+        # Urgency to fill up the horizon fund in any form at all.
+        if len(self.shares[HORIZON_SHARES]) < 100:
+            return 0.5
+
+        horizon_price = ceil(float(self.price) * 1.02)
+        n_already = len(self.shares[HORIZON_SHARES].as_split([horizon_price])[0])
+        if n_already < 100: 
 
             week_day = datetime.now().weekday()
-            week_day = 1
-            if (n_horizon_shares < 50 or
-                    (week_day == 2 and n_horizon_shares < 75) or
-                    (week_day == 3 and n_horizon_shares < 100) or 
-                    (week_day == 4 and n_horizon_shares < 125)):
+            if ((week_day == 2 and n_already < 25) or
+                    (week_day == 3 and n_already < 50) or 
+                    (week_day == 4 and n_already < 75)):
                 urgency = 0.5
             else:
                 urgency = 0.15

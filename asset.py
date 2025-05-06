@@ -297,19 +297,20 @@ class Asset:
 
         # Try to fill the horizon fund with a fraction of shares being sold or
         # by buying extra.
-        hold_ratio = self.horizon_urgency()
-        n_horizon_buy = 0
-        if hold_horizon and 0 < hold_ratio:
+        if 0 < len(self.profit_dest_overrides):
+            hold_ratio = self.horizon_urgency()
+            n_horizon_buy = 0
+            if hold_horizon and 0 < hold_ratio:
 
-            if self.recommended_sell is not None and 0 < len(self.recommended_sell):
-                n_withheld = int(ceil(len(self.recommended_sell) * hold_ratio))
-                withheld = self.recommended_sell.top(n_withheld)
-                self.shares[HORIZON_SHARES] += withheld
-                self.shares[UNBOUND_SHARES] -= withheld
-                self.recommended_sell -= withheld
-            elif self.recommended_buy is not None and hold_ratio >= 0.5:
-                n_horizon_buy = int(self.recommended_buy * hold_ratio)
-                self.recommended_buy += n_horizon_buy
+                if self.recommended_sell is not None and 0 < len(self.recommended_sell):
+                    n_withheld = int(ceil(len(self.recommended_sell) * hold_ratio))
+                    withheld = self.recommended_sell.top(n_withheld)
+                    self.shares[HORIZON_SHARES] += withheld
+                    self.shares[UNBOUND_SHARES] -= withheld
+                    self.recommended_sell -= withheld
+                elif self.recommended_buy is not None and hold_ratio >= 0.5:
+                    n_horizon_buy = int(self.recommended_buy * hold_ratio)
+                    self.recommended_buy += n_horizon_buy
 
         n_sell = 0 if self.recommended_sell is None else len(self.recommended_sell)
         n_buy = 0 if self.recommended_buy is None else self.recommended_buy

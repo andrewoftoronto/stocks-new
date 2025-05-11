@@ -11,7 +11,7 @@ from util import penny_round
 
 # Wealthsimple uses bid price for holding value calculations.
 OPTION_BID_TOLERANCE = 0.93
-ASSET_BIND_TOLERANCE = 0.9975
+ASSET_BID_TOLERANCE = 0.9975
 
 # Not sure what wealthsimple does but margin requirement seems slightly 
 # inflated compared to expectation, so I simulate some tolerance.
@@ -97,7 +97,7 @@ class Portfolio:
             if asset.currency_kind != 'usd':
                 raise Exception("not supported")
 
-            holdings += Decimal(float(asset.price) * len(asset) * ASSET_BIND_TOLERANCE)
+            holdings += Decimal(float(asset.price) * asset.n_physical_shares() * ASSET_BID_TOLERANCE)
             for option in asset.options:
                 holdings += Decimal(float(option.price) * option.n_contracts * 100 * OPTION_BID_TOLERANCE)
 
@@ -112,9 +112,9 @@ class Portfolio:
             if asset.currency_kind != 'usd':
                 raise Exception("not supported")
             
-            r += float(asset.price) * len(asset) * float(asset.margin_requirement)
+            r += float(asset.price) * asset.n_physical_shares() * float(asset.margin_requirement)
             for option in asset.options:
-                r += float(option.price) * option.n_contracts * 100
+                r += float(option.buy_cost)
 
         return Decimal(r * MARGIN_REQUIREMENT_TOLERANCE)
 

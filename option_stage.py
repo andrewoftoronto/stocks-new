@@ -69,6 +69,23 @@ class OptionStage(StageBase):
         targetReports = ','.join(targetReports)
         return f"OptionStage[targets:[{targetReports}]]"
 
+    def on_option_sold(self, option: Option):
+        ''' Call when an option has been fully sold off. '''
+
+        if option.n_contracts > 0:
+            return
+        
+        o_target = None
+        for iter_o_target in self.o_targets:
+            if iter_o_target.option == option:
+                o_target = iter_o_target
+
+        if o_target is None:
+            return
+        
+        self.o_targets.remove(o_target)
+
+
     def on_update(self, current_price: Decimal, min_margin: Decimal):
 
         # Match existing targets with options.

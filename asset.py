@@ -478,6 +478,9 @@ class Asset:
         if o.n_contracts == 0:
             self.options.remove(o)
 
+            option_stage = self.find_stage("option")
+            option_stage.on_option_sold(o)
+
         self.p.account.currencies[self.currency_kind] += n_contracts * 100 * o.price
         return o
     
@@ -510,6 +513,9 @@ class Asset:
 
         if o.n_contracts == 0:
             self.options.remove(o)
+
+            option_stage = self.find_stage("custom")
+            option_stage.on_option_sold(o)
 
         # Check if an identical option exists to combine with.
         identical_found = False
@@ -765,16 +771,21 @@ class Asset:
             min_buy_price = self.price 
 
         # Find custom stage.
-        custom_stage = None
-        for stage in self.stages:
-            if stage.get_stage_kind() == "custom":
-                custom_stage = stage
-                break
-
+        custom_stage = self.find_stage("custom")
         if custom_stage is None:
             raise Exception("no custom stage!")
         
         custom_stage.new_target(sell_price, name, profit, max_buy_price, min_buy_price)
+
+    def find_stage(self, kind):
+        ''' Find the first stage of the given kind or return None if it does
+            not exist. '''
+
+        for stage in self.stages:
+            if stage.get_stage_kind() == kind:
+                return stage
+
+        return None
 
     def add_profit_dest_override(self, dest, value: Decimal):
         ''' Add an override destination where profits will go instead of the

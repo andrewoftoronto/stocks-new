@@ -298,7 +298,7 @@ class Asset:
         # Try to fill the horizon fund with a fraction of shares being sold or
         # by buying extra.
         n_horizon_buy = 0
-        if 0 < len(self.profit_dest_overrides):
+        if 0 == len(self.profit_dest_overrides):
             hold_ratio = self.horizon_urgency()
             if hold_horizon and 0 < hold_ratio:
 

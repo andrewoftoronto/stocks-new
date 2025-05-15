@@ -239,7 +239,7 @@ class Asset:
         if report.buys_needed is not None and 0 < report.buys_needed:
             self.recommended_buy = report.buys_needed
             self.recommended_sell = sold_shares
-        elif 0 < len(self.shares[UNBOUND_SHARES]):
+        if 0 < len(self.shares[UNBOUND_SHARES]):
 
             # Sell unbound shares sufficiently below price.
             unbound_to_sell = report.unbound_shares.as_split([self.price / MIN_SELL_GAIN])[0]

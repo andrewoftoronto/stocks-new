@@ -146,7 +146,7 @@ class OptionStage(StageBase):
             if upgrade_target is not None and needed > 10:
                 name = "option-upgrade"
                 sell_price = upgrade_asset_sell_price
-                max_buy_price = Decimal(float(current_price) * 1.02)
+                max_buy_price = Decimal(float(current_price) + 0.2 * float(sell_price - current_price))
                 target = Target(name, needed, sell_price, max_buy_price, current_price)
                 matching_target.targets.append(target)
 

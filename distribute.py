@@ -96,6 +96,7 @@ def distribute_pass(shares: Shares, targets: List[Target], current_price: Decima
 
         assignment = Assignment(target, Shares(), 0)
         target_to_assignment[target] = assignment
+        skip_shares = Shares()
         while 0 < len(remaining_shares):
 
             if target.profit <= assignment.profit:
@@ -108,31 +109,12 @@ def distribute_pass(shares: Shares, targets: List[Target], current_price: Decima
                 # more expensive shares.
                 break
 
-            # If this is below min_buy_price, check for alternatives.
-            if pair[0] < target.min_buy_price:
+            elif pair[0] < target.min_buy_price:
+                skip_shares += pair
+                remaining_shares.pairs = remaining_shares.pairs[1:]
+                continue
 
-                # We will choose the highest scoring alternative. The loop
-                # will consider the original pair as well.
-                chosen_pair = None
-                best_score = None
-                for alternative_pair in remaining_shares.pairs:
-                    if target.max_buy_price < alternative_pair[0]:
-                        break
-
-                    is_above = target.min_buy_price <= alternative_pair[0]
-                    score = (target.sell_price - max(alternative_pair[0], target.min_buy_price))
-                    if not is_above:
-                        score -= target.min_buy_price - alternative_pair[0]
-
-                    if best_score is None or best_score < score:
-                        chosen_pair = alternative_pair
-                        best_score = score
-
-                    if is_above:
-                        break
-
-            else:
-                chosen_pair = pair
+            chosen_pair = pair
 
             profit_needed = target.profit - assignment.profit
             n_shares, profit = pair_n_needed_for_profit(chosen_pair, profit_needed,
@@ -146,6 +128,8 @@ def distribute_pass(shares: Shares, targets: List[Target], current_price: Decima
                 print("Error diagnostics:")
                 print("  Chosen Pair:", chosen_pair)
                 raise Exception("Somehow n_shares = 0")
+
+        remaining_shares += skip_shares
 
         if assignment.profit < target.profit:
 

@@ -103,13 +103,14 @@ def distribute_pass(shares: Shares, targets: List[Target], current_price: Decima
                 break
 
             pair = remaining_shares.pairs[0]
+            min_buy_price = min(target.min_buy_price, current_price)
             if target.max_buy_price < pair[0]:
 
                 # This pair is ineligible to satisfy this target and so would any
                 # more expensive shares.
                 break
 
-            elif pair[0] < target.min_buy_price:
+            elif pair[0] < min_buy_price:
                 skip_shares += pair
                 remaining_shares.pairs = remaining_shares.pairs[1:]
                 continue

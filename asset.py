@@ -360,7 +360,8 @@ class Asset:
 
         self.history.append(HistoryItem(datetime.now(), f"Bought {n}", len(self)))
 
-    def sell(self, n: int=None, do_checkpoint: bool=True, prevent_oversell: bool=False):
+    def sell(self, n: int=None, do_checkpoint: bool=True, 
+            prevent_oversell: bool=False, enable_min_profit=True):
         ''' Sell shares. 
         
             If n is not None: sells the n highest-priced unbound shares that 
@@ -372,10 +373,15 @@ class Asset:
         if n is None:
             raise Exception("Not supported quite yet.")
 
+        if enable_min_profit:
+            min_sell_price = self.price / MIN_SELL_GAIN
+        else:
+            min_sell_price = self.price
+
         # In computing to_sell: first gets all unbound shares below the minimum
         # allowed sell price; then takes the top n of those.
         unbound = self.shares.groups[UNBOUND_SHARES]
-        sellable = unbound.as_split([self.price / MIN_SELL_GAIN])[0]
+        sellable = unbound.as_split([min_sell_price])[0]
         n_actual_sell = n if not prevent_oversell else min(n, len(sellable))
         to_sell = sellable.top(n_actual_sell)
 

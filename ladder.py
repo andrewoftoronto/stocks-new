@@ -246,7 +246,7 @@ class Ladder(StageBase):
                         sell_times, min_margin=min_margin)
                 target.max_buy_price = penny_round(sell_price / 
                         rung_def.min_share_profit_ratio)
-                target.min_buy_price = min(target.min_buy_price, current_price)
+                target.min_buy_price = min(target.min_buy_price, Decimal(float(current_price) * 0.99))
 
         pass
 

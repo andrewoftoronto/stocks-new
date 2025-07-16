@@ -1,4 +1,6 @@
 from decimal import Decimal
+import pytz
+import datetime
 from util import to_dict, penny_round, decimal_get
 from stage import StageBase
 from serialize_context import SerializeContext
@@ -10,7 +12,8 @@ class RungDef:
 
     def __init__(self, sell_times: Decimal, profit: Decimal,
             min_share_profit_ratio: Decimal, min_profit: Decimal = None,
-            disable_trend_threshold: Decimal = None):
+            disable_trend_threshold: Decimal = None,
+            disable_days = None):
         
         # Maximum number of times from the current price that the sell price of
         # the rung will be. If exceeded, the rung's price will be lowered.
@@ -37,6 +40,9 @@ class RungDef:
         # then this rung will be disabled.
         self.disable_trend_threshold = disable_trend_threshold
 
+        # Ladder rungs are disabled on these days.
+        self.disable_days = disable_days
+
     def to_dict(self, context: SerializeContext):
         return {
             "id": context.new_id(self),
@@ -44,7 +50,8 @@ class RungDef:
             "profit": self.profit,
             "minProfit": self.min_profit,
             "minShareProfitRatio": self.min_share_profit_ratio,
-            "disableTrendThreshold": self.disable_trend_threshold
+            "disableTrendThreshold": self.disable_trend_threshold,
+            "disableDays": self.disable_days
         }
     
     def __repr__(self):
@@ -52,7 +59,8 @@ class RungDef:
             f"profit: {self.profit:.2f}, " +
             f"minProfit: {self.min_profit:.2f}, " +
             f"minShareProfitRatio: {self.min_share_profit_ratio:.2f}, " + 
-            f"disableTrendThreshold: {self.disable_trend_threshold}]")
+            f"disableTrendThreshold: {self.disable_trend_threshold}], " +
+            f"disableDays: {self.disable_days}")
 
 
 class Rung:
@@ -139,16 +147,26 @@ class Ladder(StageBase):
 
             # In a strong downward trend, disable rung defs that have reached
             # their threshold.
+            # Also disable based on week-days if set.
             for (rung_def, rungs) in self.def_to_rungs.items():
-                if rung_def.disable_trend_threshold is None:
-                    continue
-                
-                ratio = Decimal((self.max_trend_point - current_price) / self.max_trend_point)
-                if rung_def.disable_trend_threshold <= ratio:
-                    for rung in rungs:
-                        if not rung.disabled:
-                            rung.disabled = True
-                            print(f"Downward trend disabling rung: {rung}")
+                if rung_def.disable_days is not None:
+                    timezone = pytz.timezone("America/Toronto")
+                    now = datetime.datetime.now(timezone)
+                    day = now.weekday()
+                    if day in rung_def.disable_days:
+                        for rung in rungs:
+                            if not rung.disabled:
+                                rung.disabled = True
+                                print(f"Day of week disabling rung: {rung}")
+
+
+                if rung_def.disable_trend_threshold is not None:
+                    ratio = Decimal((self.max_trend_point - current_price) / self.max_trend_point)
+                    if rung_def.disable_trend_threshold <= ratio:
+                        for rung in rungs:
+                            if not rung.disabled:
+                                rung.disabled = True
+                                print(f"Downward trend disabling rung: {rung}")
 
         # Remove rungs that have been reached.
         new_def_to_rungs = {}
@@ -182,6 +200,15 @@ class Ladder(StageBase):
         # times above current price.
         # We will handle adjusting the horizon separately.
         for (number, rung_def) in enumerate(self.rung_defs):
+
+            # Enforce rung disable rules.
+            if rung_def.disable_days is not None:
+                timezone = pytz.timezone("America/Toronto")
+                now = datetime.datetime.now(timezone)
+                day = now.weekday()
+                if day in rung_def.disable_days:
+                    continue
+
             rungs = self.def_to_rungs.get(rung_def, [None])
             for (i, rung) in enumerate(rungs):
                 max_sell_price = penny_round(current_price * 
@@ -367,7 +394,8 @@ def new_rung_def_from_dict(d, context: SerializeContext) -> RungDef:
         profit=Decimal(d["profit"]),
         min_share_profit_ratio=Decimal(d["minShareProfitRatio"]),
         min_profit=Decimal(d["minProfit"]),
-        disable_trend_threshold=decimal_get(d, "disableTrendThreshold", None)
+        disable_trend_threshold=decimal_get(d, "disableTrendThreshold", None),
+        disable_days=d.get("disableDays", None),
     )
     context.id_to_value[d["id"]] = rung_def
     return rung_def

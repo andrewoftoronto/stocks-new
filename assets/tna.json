@@ -5,14 +5,14 @@
             "date": "2025-07-15T00:00:00",
             "funding": 0.0,
             "nShares": 114,
-            "price": 40.0,
+            "price": 39.97,
             "repay": 0.0
         }
     ],
     "cachedTargets": [
         {
             "horizon_request_id": null,
-            "id": "t40",
+            "id": "t15",
             "max_buy_price": 34.74,
             "min_buy_price": 33.0561,
             "name": "1.051x",
@@ -21,7 +21,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t41",
+            "id": "t16",
             "max_buy_price": 35.09,
             "min_buy_price": 33.0561,
             "name": "1.062x",
@@ -30,7 +30,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t42",
+            "id": "t17",
             "max_buy_price": 35.45,
             "min_buy_price": 33.0561,
             "name": "1.072x",
@@ -39,7 +39,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t43",
+            "id": "t18",
             "max_buy_price": 35.8,
             "min_buy_price": 33.0561,
             "name": "1.083x",
@@ -48,7 +48,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t44",
+            "id": "t19",
             "max_buy_price": 36.16,
             "min_buy_price": 33.0561,
             "name": "1.094x",
@@ -57,7 +57,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t45",
+            "id": "t20",
             "max_buy_price": 36.51,
             "min_buy_price": 33.0561,
             "name": "1.105x",
@@ -66,7 +66,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t46",
+            "id": "t21",
             "max_buy_price": 36.88,
             "min_buy_price": 33.0561,
             "name": "1.116x",
@@ -75,7 +75,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t47",
+            "id": "t22",
             "max_buy_price": 37.25,
             "min_buy_price": 33.0561,
             "name": "1.127x",
@@ -84,7 +84,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t48",
+            "id": "t23",
             "max_buy_price": 37.62,
             "min_buy_price": 33.0561,
             "name": "1.138x",
@@ -93,7 +93,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t49",
+            "id": "t24",
             "max_buy_price": 38.0,
             "min_buy_price": 33.0561,
             "name": "1.149x",
@@ -102,7 +102,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t50",
+            "id": "t25",
             "max_buy_price": 38.38,
             "min_buy_price": 33.0561,
             "name": "1.161x",
@@ -111,7 +111,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t51",
+            "id": "t26",
             "max_buy_price": 38.76,
             "min_buy_price": 33.0561,
             "name": "1.173x",
@@ -120,7 +120,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t52",
+            "id": "t27",
             "max_buy_price": 39.15,
             "min_buy_price": 33.0561,
             "name": "1.184x",
@@ -129,7 +129,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t53",
+            "id": "t28",
             "max_buy_price": 39.54,
             "min_buy_price": 33.0561,
             "name": "1.196x",
@@ -138,7 +138,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t54",
+            "id": "t29",
             "max_buy_price": 39.94,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -147,7 +147,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t55",
+            "id": "t30",
             "max_buy_price": 40.34,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -156,7 +156,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t56",
+            "id": "t31",
             "max_buy_price": 40.74,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -165,7 +165,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t57",
+            "id": "t32",
             "max_buy_price": 41.15,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -174,7 +174,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t58",
+            "id": "t33",
             "max_buy_price": 41.56,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -183,7 +183,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t59",
+            "id": "t34",
             "max_buy_price": 41.98,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -192,7 +192,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t60",
+            "id": "t35",
             "max_buy_price": 42.4,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -201,7 +201,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t61",
+            "id": "t36",
             "max_buy_price": 42.82,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -210,7 +210,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t62",
+            "id": "t37",
             "max_buy_price": 43.25,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -219,7 +219,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t63",
+            "id": "t38",
             "max_buy_price": 43.68,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -228,7 +228,7 @@
         },
         {
             "horizon_request_id": null,
-            "id": "t64",
+            "id": "t39",
             "max_buy_price": 44.12,
             "min_buy_price": 33.0561,
             "name": "1.208x",
@@ -283,64 +283,69 @@
             "description": "Bought 114",
             "physicalShares": 1170,
             "time": "2025-07-15 16:20:05.290208"
+        },
+        {
+            "description": "Bought 25",
+            "physicalShares": 989,
+            "time": "2025-07-16 12:41:59.375130"
         }
     ],
     "marginRequirement": 0.4,
     "name": "tna",
     "options": [],
     "order": 1,
-    "price": 34.57,
+    "price": 35.0,
     "profitDestOverrides": [],
     "shares": [
         [
             [
-                36.75,
-                2
+                35.0,
+                25
             ]
         ],
         [
             [
-                34.78,
+                34.76,
                 44
             ],
             [
-                35.2,
+                35.18,
                 97
             ],
             [
-                35.9,
+                35.88,
                 74
             ],
             [
-                36.75,
-                347
+                36.73,
+                349
             ]
         ],
         [
             [
-                34.78,
+                34.76,
                 8
             ],
             [
-                36.75,
+                36.73,
                 78
             ],
             [
-                40.0,
+                39.97,
                 114
             ]
         ],
         [
             [
-                35.5,
+                35.48,
                 100
             ],
             [
-                35.9,
+                35.88,
                 4
             ],
             [
-                36.75,
+                36.73,
                 96
             ]
         ]
@@ -352,6 +357,33 @@
         },
         {
             "defs": [
+                {
+                    "disableTrendThreshold": 0.05,
+                    "disableDays": [2, 3, 4, 5, 6],
+                    "id": 901,
+                    "minProfit": 15.0,
+                    "minShareProfitRatio": 1.02,
+                    "profit": 25.0,
+                    "sellTimes": 1.02
+                },
+                {
+                    "disableTrendThreshold": 0.1,
+                    "disableDays": [3, 4, 5, 6],
+                    "id": 902,
+                    "minProfit": 25.0,
+                    "minShareProfitRatio": 1.02,
+                    "profit": 30.0,
+                    "sellTimes": 1.0302
+                },
+                {
+                    "disableTrendThreshold": 0.1,
+                    "disableDays": [4, 5, 6],
+                    "id": 903,
+                    "minProfit": 25.0,
+                    "minShareProfitRatio": 1.02,
+                    "profit": 35.0,
+                    "sellTimes": 1.040502
+                },
                 {
                     "disableTrendThreshold": null,
                     "id": 0,
@@ -473,14 +505,12 @@
                     "sellTimes": 1.2081089504435316
                 }
             ],
-            "horizon": 44.97165,
+            "horizon": 44.943317860499995,
             "maxTrendPoint": 36.75,
             "minTrendPoint": 33.39,
             "paused": false,
             "rungFrequency": 1.01,
-            "rungs": {
-                
-            },
+            "rungs": {},
             "stage_kind": "ladder"
         },
         {

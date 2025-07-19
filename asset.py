@@ -62,6 +62,8 @@ class Asset:
 
         self.options = []
 
+        self.write_options = []
+
         self.history = []
 
         # Override where profits should go instead of just going to the general 

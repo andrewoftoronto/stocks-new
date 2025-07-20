@@ -1,7 +1,7 @@
 from copy import deepcopy
 from decimal import Decimal
 from math import ceil
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from util import to_dict, penny_round, currency_collection_get
 from typing import Optional
@@ -14,6 +14,7 @@ from serialize_context import SerializeContext
 from distribute import distribute, DistributionReport
 from history import new_history_item_from_dict, HistoryItem
 from option import Option, new_option_from_dict
+from write_option import WriteOption, new_write_option_from_dict
 from borrow_event import new_borrow_event_from_dict, BorrowEvent
 from borrow_fund import income_tax_rate
 from profit_dest_override import ProfitDestOverride, new_profit_dest_override_from_dict
@@ -63,6 +64,7 @@ class Asset:
         self.options = []
 
         self.write_options = []
+        self.weekly_call_goal_n_contracts = 0
 
         self.history = []
 
@@ -83,6 +85,7 @@ class Asset:
         self.fixup_price()
 
         options = [to_dict(o, context) for o in self.options]
+        write_options = [to_dict(o, context) for o in self.write_options]
         return {
             "name": self.name,
             "order": self.order,
@@ -95,6 +98,8 @@ class Asset:
             "borrowEvents": to_dict(self.borrow_events, context),
             "history": to_dict(self.history, context),
             "options": options,
+            "writeOptions": write_options,
+            "weeklyCallGoalNContracts": self.weekly_call_goal_n_contracts,
             "dailyDecayFactor": self.daily_decay_factor,
             "baseChange": Decimal(self.base_change),
             "profitDestOverrides": to_dict(self.profit_dest_overrides, context),
@@ -252,25 +257,61 @@ class Asset:
     def horizon_urgency(self) -> float:
         ''' A score from 0->1 of how urgent it is to fill the horizon fund. '''
 
-        # Urgency to fill up the horizon fund in any form at all.
-        if len(self.shares[HORIZON_SHARES]) < 50:
-            return 0.5
+        # This is the minimum number of horizon shares and the amount considered
+        # good to strive for.
+        horizon_minimum = 50
+        horizon_good = 100
 
+        # Urgency to fill up the horizon fund in any form at all in case new
+        # targets at the horizon will be created.
+        if len(self.shares[HORIZON_SHARES]) < horizon_minimum:
+            return 1.0
+        
+        col_urgency = self.collateral_urgency(horizon_minimum)
+        horizon_urgency = 0.15 if len(self.shares[HORIZON_SHARES]) < horizon_good else 0
+        return max(col_urgency, horizon_urgency)
+
+    def collateral_urgency(self, horizon_minimum):
+        ''' Scores how urgent it is to fill up the horizon fund for the 
+            collateral alone. '''
+        
+        # How close we are to fulfilling the weekly goal.
+        contracts_written = 0
+        today = datetime.today()
+        days_until_sunday = (6 - today.weekday()) % 7 + 1
+        next_sunday = (today + timedelta(days=days_until_sunday)).date()
+        next_next_sunday = (next_sunday + timedelta(days=7))
+        for option in self.write_options:
+            option_date = datetime.strptime(option.date, "%Y-%m-%d").date()
+            if next_sunday < option_date and option_date < next_next_sunday:
+                contracts_written += 1
+
+        contracts_needed = self.weekly_call_goal_n_contracts - contracts_written
+        print("Contracts Needed:", contracts_needed)
+
+        # The remaining urgency is for having shares ready for collateral for 
+        # call options. First off, we don't worry about this until Wednesday.
+        week_day = datetime.now().weekday()
+        if week_day <= 2:
+            return 0
+
+        # Compute how many shares are already ready for use as collateral.
+        horizon_ready_shares = self.shares[HORIZON_SHARES].top(horizon_minimum)
+        remaining_horizon_shares = self.shares[HORIZON_SHARES] - horizon_ready_shares
         horizon_price = ceil(float(self.price) * 1.02)
-        n_already = len(self.shares[HORIZON_SHARES].as_split([horizon_price])[0])
-        if n_already < 100: 
+        collateral_ready_shares = remaining_horizon_shares.as_split([horizon_price])[0]
+        n_collateral_shares = len(collateral_ready_shares)
+        
+        # No urgency if already satisfied.
+        if contracts_needed * 100 <= n_collateral_shares:
+            return 0
 
-            week_day = datetime.now().weekday()
-            if ((week_day == 2 and n_already < 25) or
-                    (week_day == 3 and n_already < 50) or 
-                    (week_day == 4 and n_already < 75)):
-                urgency = 0.5
-            else:
-                urgency = 0.15
-        else:
-            urgency = 0
-
-        return urgency
+        # Highly urgent on Friday.
+        if week_day >= 5:
+            return 1
+        
+        if week_day < 4:
+            return 0.5
 
     def u(self, auto_sell=False):
         ''' Quick alias for update(). '''
@@ -439,6 +480,31 @@ class Asset:
         self.history.append(HistoryItem(datetime.now(), f"Sold {to_sell}", len(self)))
 
         return to_sell
+
+    def write_option(self, mode, date, strike_price, n_contracts, 
+            price) -> WriteOption:
+        ''' Write an option. '''
+        self.fixup_price()
+
+        price = Decimal(price)
+
+        option = WriteOption(self, mode, date, strike_price, n_contracts, price)
+        self.p.account.currencies[self.currency_kind] -= n_contracts * 100 * price
+
+        # Check if an identical option exists to combine with.
+        identical_found = False
+        for other_option in self.write_options:
+            if other_option.is_identical_security(option):
+                other_option.combine(option)
+                option = other_option
+                option.price = price
+                identical_found = True
+                break
+
+        if not identical_found:
+            self.write_options.append(option)
+
+        return option
 
     def buy_option(self, mode, date, strike_price, n_contracts, price=None,
             use_borrow_fund: bool = False) -> Option:
@@ -824,7 +890,9 @@ class Asset:
         self.currency_kind = currency_kind
         self.shares = shares
         self.surplus = surplus
+        self.weekly_call_goal_n_contracts = dict["weeklyCallGoalNContracts"]
         self.options = [new_option_from_dict(d, context) for d in dict['options']]
+        self.write_options = [new_write_option_from_dict(d, context) for d in dict['writeOptions']]
         self.cached_targets = [new_target_from_dict(t, context) for t in dict["cachedTargets"]]
         self.stages = [new_stage_from_dict(s, context) for s in dict["stages"]]
         self.borrow_events = [new_borrow_event_from_dict(e) for e in dict["borrowEvents"]]

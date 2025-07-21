@@ -278,7 +278,7 @@ class Asset:
         # How close we are to fulfilling the weekly goal.
         contracts_written = 0
         today = datetime.today()
-        days_until_sunday = (6 - today.weekday()) % 7 + 1
+        days_until_sunday = (6 - today.weekday()) % 7
         next_sunday = (today + timedelta(days=days_until_sunday)).date()
         next_next_sunday = (next_sunday + timedelta(days=7))
         for option in self.write_options:
@@ -311,7 +311,7 @@ class Asset:
             return 1
         
         if week_day < 4:
-            return 0.5
+            return 0.15
 
     def u(self, auto_sell=False):
         ''' Quick alias for update(). '''

@@ -269,6 +269,7 @@ class Asset:
         
         col_urgency = self.collateral_urgency(horizon_minimum)
         horizon_urgency = 0.15 if len(self.shares[HORIZON_SHARES]) < horizon_good else 0
+        print(col_urgency, horizon_urgency)
         return max(col_urgency, horizon_urgency)
 
     def collateral_urgency(self, horizon_minimum):
@@ -307,10 +308,9 @@ class Asset:
             return 0
 
         # Highly urgent on Friday.
-        if week_day >= 5:
+        if week_day >= 4:
             return 1
-        
-        if week_day < 4:
+        else:
             return 0.15
 
     def u(self, auto_sell=False):

@@ -42,7 +42,6 @@ class WriteOption:
         if self.strike_price != other.strike_price:
             raise Exception(f"Strikes do not match: {self.strike_price} vs {other.strike_price}")
 
-        self.buy_cost += other.buy_cost
         self.n_contracts += other.n_contracts
 
     def get_serialize_id(self, context: SerializeContext):

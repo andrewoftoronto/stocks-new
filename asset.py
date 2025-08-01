@@ -34,10 +34,13 @@ BOUND_SHARES = 1
 # the horizon.
 HORIZON_SHARES = 2
 
+# Index of segregated share account containing shares reserved for use as
+# collateral.
+COLLATERAL_SHARES = 3
+
 # Index of segregated share account containing shares reserved for manual
 # use.
-MANUAL_SHARES = 3
-
+MANUAL_SHARES = 4
 
 class Asset:
     ''' An asset that can be divided into shares with a particular price at 
@@ -51,7 +54,7 @@ class Asset:
         self.order = order
         self.price = price
         self.currency_kind = currency_kind
-        self.shares = shares or new_empty_segregated_shares(4)
+        self.shares = shares or new_empty_segregated_shares(5)
         self.base_change = Decimal(base_change)
 
         self.surplus = Decimal(0)
@@ -122,7 +125,10 @@ class Asset:
         money_value = Decimal(self.price * n_physical_shares) + option_value
         price = self.price
         eq = f"{n_physical_shares} ({n_shares}) {self.name} x ${price:.2f} + ${option_value:.2f} = ${money_value:.2f}"
-        return f"{eq}; borrows: {self.n_borrowed()}; unbound: {len(self.shares[UNBOUND_SHARES])}; horizon: {len(self.shares[HORIZON_SHARES])}; manual: {len(self.shares[MANUAL_SHARES])}"
+        return f"{eq}; borrows: {self.n_borrowed()}; unbound: {len(self.shares[UNBOUND_SHARES])}; "\
+            f"horizon: {len(self.shares[HORIZON_SHARES])}; "\
+            f"collateral: {len(self.shares[COLLATERAL_SHARES])}; "\
+            f"manual: {len(self.shares[MANUAL_SHARES])};"
 
     def __len__(self) -> int:
         return len(self.shares)
@@ -285,7 +291,7 @@ class Asset:
         for option in self.write_options:
             option_date = datetime.strptime(option.date, "%Y-%m-%d").date()
             if next_sunday < option_date and option_date < next_next_sunday:
-                contracts_written += 1
+                contracts_written += option.n_contracts
 
         contracts_needed = self.weekly_call_goal_n_contracts - contracts_written
         print("Contracts Needed:", contracts_needed)
@@ -782,6 +788,11 @@ class Asset:
         ''' Fixes up the price to be a proper Decimal. '''
         self.price = Decimal(penny_round(self.price))
 
+    def get_decay_fn(self, n_days):
+        decay = lambda x, f, t: x * (1 - f) ** t
+        decay_fn = lambda x: decay(x, self.daily_decay_factor, n_days)
+        return decay_fn
+
     def apply_decay(self, n_days=None):
         ''' Apply stock price decay to account for leveraged ETF price decay
             over time relative to the underlying index.
@@ -792,8 +803,7 @@ class Asset:
         if self.daily_decay_factor is None:
             return
         
-        decay = lambda x, f, t: x * (1 - f) ** t
-        decay_fn = lambda x: decay(x, self.daily_decay_factor, n_days)
+        decay_fn = lambda x: self.get_decay_fn(x, n_days)
 
         for stage in self.stages:
             stage.apply_decay_fn(decay_fn)

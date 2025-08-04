@@ -803,7 +803,7 @@ class Asset:
         if self.daily_decay_factor is None:
             return
         
-        decay_fn = lambda x: self.get_decay_fn(x, n_days)
+        decay_fn = self.get_decay_fn(n_days)
 
         for stage in self.stages:
             stage.apply_decay_fn(decay_fn)

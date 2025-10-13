@@ -819,9 +819,9 @@ class Asset:
         
         borrow_decay = Decimal(0)
         for (i, e) in enumerate(self.borrow_events):
-            old_price = e.price
-            e.price = penny_round(decay_fn(e.price))
-            borrow_decay += (old_price - e.price) * e.n_shares
+            old_price = e.rebuy_at
+            e.rebuy_at = penny_round(decay_fn(e.rebuy_at))
+            borrow_decay += (old_price - e.rebuy_at) * e.n_shares
 
         # Share price decay is considered negative (a loss/cost).
         # Borrow price decay encourages borrowing at a lower price than before

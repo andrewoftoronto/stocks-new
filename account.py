@@ -60,7 +60,7 @@ class Account:
         n_days = date_diff.days
         self.last_checked = now
 
-        self.borrow_fund.update()
+        #self.borrow_fund.update()
 
         if n_days > 0:
 

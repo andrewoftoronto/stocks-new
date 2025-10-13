@@ -160,8 +160,7 @@ class Asset:
 
         borrow_str = "["
         for (i, event) in enumerate(self.borrow_events):
-            max_rebuy = event.get_max_rebuy()
-            borrow_str += f"${max_rebuy:.2f} (${event.price:.2f}) x {event.n_shares} [${event.repay:.2f}/${event.funding:.2f}]"
+            borrow_str += f"${event.rebuy_at:.2f} (${event.price:.2f}) x {event.n_shares} [${event.cost:.2f}]"
             if i < len(self.borrow_events) - 1:
                 borrow_str += ", "
         borrow_str += "]" 
@@ -453,17 +452,6 @@ class Asset:
             if o.value < 0.01:
                 self.profit_dest_overrides.pop(0)
 
-        # Distribute profit to borrow events if any exist without the necessary
-        # money to guarantee funding.
-        borrow_event_tax_remaining = Decimal(float(remaining_profit) * 0.1)
-        for borrow_event in reversed(self.borrow_events):
-            if borrow_event.repay < borrow_event.funding:
-                amount_to_repay = min(borrow_event.funding - borrow_event.repay, borrow_event_tax_remaining)
-                remaining_profit -= amount_to_repay
-                borrow_event.repay += amount_to_repay
-                borrow_event_tax_remaining -= amount_to_repay
-        remaining_profit += borrow_event_tax_remaining
-
         # Distribute remaining profit to borrow fund income stream if it is
         # below readiness threshold. And distribute a portion as tax if below
         # the tax threshold.
@@ -622,36 +610,45 @@ class Asset:
             n_borrows += borrow_event.n_shares
         return n_borrows
 
-    def borrow(self, n, funding=None):
+    def borrow(self, n, cost, rebuy_percent=None):
         ''' Borrow n shares at the current price. Physically selling them 
             while keeping them on as "virtual shares". 
             
-            You can optionally specify funding which will be loaned from the
-            borrow fund.    
+            cost: how much it cost to secure the borrow, such as from calls.
+            real_shares: whether this uses shares that already exist or mints
+                new shares (such as with horizon borrows).    
         '''
         self.fixup_price()
 
-        # Default to +20% rebuy threshold.
-        if funding is None:
-            funding = n * self.price * Decimal(0.2)
+        if rebuy_percent is None:
+            if 0 < cost:
+                rebuy_percent = 30
+            else:
+                rebuy_percent = 0
 
-        self.p.account.borrow_fund.add_loan(funding, self.currency_kind)
-
-        # Try to guarantee funding using the reserve.
-        if funding > 0:
-            available = currency_collection_get(self.p.account.borrow_fund.income, 
-                    self.currency_kind)
-            repay = min(available, funding)
-            self.p.account.borrow_fund.add_income(-repay, self.currency_kind)
-        else:
-            repay = Decimal(0)
+        rebuy_at = self.price + self.price * Decimal(rebuy_percent) / 100
 
         now = datetime.now()
         tz = pytz.timezone('America/New_York')
         date = tz.localize(now).date()
 
-        self.borrow_events.append(BorrowEvent(self.price, n, date, funding, repay))
+        self.borrow_events.append(BorrowEvent(self.price, n, date, cost, rebuy_at))
         self.p.account.currencies[self.currency_kind] += self.price * n
+
+        # Cover cost by buy-borrowing shares at a higher price.
+        if 0 < cost:
+            if rebuy_percent < 30:
+                raise Exception("Don't know how to handle this.")
+            
+            old_price = self.price
+            coverage_price = self.price * Decimal(1.1)
+            needed = ceil(cost / (rebuy_at - coverage_price))
+            self.price = coverage_price
+            self.buy(needed)
+            self.borrow(needed, 0, 0)
+            print("Needed", needed, cost, rebuy_at, coverage_price)
+
+            self.price = old_price
 
     def unborrow(self, n=None):
         ''' Unborrow n shares at the current price. Physically re-buying them. '''

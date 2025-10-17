@@ -207,8 +207,7 @@ class Ladder(StageBase):
                 now = datetime.datetime.now(timezone)
                 day = now.weekday()
                 if day in rung_def.disable_days:
-                    continue
-            
+                    continue      
 
             rungs = self.def_to_rungs.get(rung_def, [None])
             for (i, rung) in enumerate(rungs):

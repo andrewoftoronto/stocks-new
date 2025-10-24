@@ -149,7 +149,7 @@ class Ladder(StageBase):
             # their threshold.
             # Also disable based on week-days if set.
             for (rung_def, rungs) in self.def_to_rungs.items():
-                if rung_def.disable_days is not None:
+                '''if rung_def.disable_days is not None:
                     timezone = pytz.timezone("America/Toronto")
                     now = datetime.datetime.now(timezone)
                     day = now.weekday()
@@ -158,7 +158,7 @@ class Ladder(StageBase):
                             if not rung.disabled:
                                 rung.disabled = True
                                 print(f"Day of week disabling rung: {rung}")
-                
+                '''
 
                 if rung_def.disable_trend_threshold is not None:
                     ratio = Decimal((self.max_trend_point - current_price) / self.max_trend_point)
@@ -202,12 +202,14 @@ class Ladder(StageBase):
         for (number, rung_def) in enumerate(self.rung_defs):
 
             # Enforce rung disable rules.
+            '''
             if rung_def.disable_days is not None:
                 timezone = pytz.timezone("America/Toronto")
                 now = datetime.datetime.now(timezone)
                 day = now.weekday()
                 if day in rung_def.disable_days:
                     continue      
+            '''
 
             rungs = self.def_to_rungs.get(rung_def, [None])
             for (i, rung) in enumerate(rungs):

@@ -25,6 +25,16 @@ def combine_currency_collections(a, b):
 	return c
 
 
+def subtract_currency_collections(a, b):
+	c = deepcopy(a)
+	for (currency, amount) in b.items():
+		if currency in c:
+			c[currency] -= amount
+		else:
+			c[currency] = -amount
+	return c
+
+
 def currency_collection_get(collection, currency_kind):
 	if currency_kind in collection:
 		return collection[currency_kind]

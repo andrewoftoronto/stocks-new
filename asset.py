@@ -38,9 +38,12 @@ HORIZON_SHARES = 2
 # collateral.
 COLLATERAL_SHARES = 3
 
-# Index of segregated share account containing shares reserved for manual
-# use.
-MANUAL_SHARES = 4
+# Index of segregated share account containing shares reserved for paying back
+# loans.
+PROMISE_SHARES = 4
+
+MANUAL_SHARES = 5
+
 
 class Asset:
     ''' An asset that can be divided into shares with a particular price at 
@@ -54,7 +57,7 @@ class Asset:
         self.order = order
         self.price = price
         self.currency_kind = currency_kind
-        self.shares = shares or new_empty_segregated_shares(5)
+        self.shares = shares or new_empty_segregated_shares(6)
         self.base_change = Decimal(base_change)
 
         self.surplus = Decimal(0)
@@ -128,6 +131,7 @@ class Asset:
         return f"{eq}; borrows: {self.n_borrowed()}; unbound: {len(self.shares[UNBOUND_SHARES])}; "\
             f"horizon: {len(self.shares[HORIZON_SHARES])}; "\
             f"collateral: {len(self.shares[COLLATERAL_SHARES])}; "\
+            f"promised: {len(self.shares[PROMISE_SHARES])}; " \
             f"manual: {len(self.shares[MANUAL_SHARES])};"
 
     def __len__(self) -> int:
@@ -452,18 +456,12 @@ class Asset:
             if o.value < 0.01:
                 self.profit_dest_overrides.pop(0)
 
-        # Distribute remaining profit to borrow fund income stream if it is
-        # below readiness threshold. And distribute a portion as tax if below
-        # the tax threshold.
-        if self.p.account.borrow_fund.is_in_danger(self.currency_kind):
-            remaining_room = self.p.account.borrow_fund.get_income_ready_room(self.currency_kind)
-            contribution = min(remaining_profit, remaining_room)
-            remaining_profit -= contribution
-            self.p.account.borrow_fund.add_income(contribution, self.currency_kind)
+        # Distribute a portion of remaining profit as tax if below the tax 
+        # threshold.
         if self.p.account.borrow_fund.is_taxed(self.currency_kind):
             contribution = Decimal(income_tax_rate * float(remaining_profit))
             remaining_profit -= contribution
-            self.p.account.borrow_fund.add_income(contribution, self.currency_kind)
+            self.p.account.borrow_fund.add_loan(-contribution, self.currency_kind)
 
         # Distribute a portion to stages.
         for stage in self.stages:
@@ -635,67 +633,29 @@ class Asset:
         self.borrow_events.append(BorrowEvent(self.price, n, date, cost, rebuy_at))
         self.p.account.currencies[self.currency_kind] += self.price * n
 
-        # Cover cost by buy-borrowing shares at a higher price.
         if 0 < cost:
-            if rebuy_percent < 30:
-                raise Exception("Don't know how to handle this.")
-            
-            old_price = self.price
-            coverage_price = self.price * Decimal(1.1)
-            needed = ceil(cost / (rebuy_at - coverage_price))
-            self.price = coverage_price
-            self.buy(needed)
-            self.borrow(needed, 0, 0)
-            print("Needed", needed, cost, rebuy_at, coverage_price)
+            self.p.account.borrow_fund.add_loan(cost, self.currency_kind)
 
-            self.price = old_price
-
-    def unborrow(self, n=None):
+    def unborrow(self, borrow_event, n):
         ''' Unborrow n shares at the current price. Physically re-buying them. '''
         self.fixup_price()
 
-        borrow_events = deepcopy(self.borrow_events)
-        n_remaining = n
-        while 0 < len(borrow_events) and 0 < n_remaining:
-            event = borrow_events[-1]
+        if n > borrow_event.n_shares:
+            raise Exception("unborrow exceeds number of shares in event")
 
-            old_n_shares = event.n_shares
-            n_to_return = min(event.n_shares, n_remaining)
-            n_remaining -= n_to_return
-            event.n_shares -= n_to_return
+        old_n_shares = borrow_event.n_shares
+        if n == old_n_shares:
+            self.borrow_events.remove(borrow_event)
+        else:
+            borrow_event.n_shares -= n
+            borrow_event.cost -= borrow_event.cost * Decimal(n) / Decimal(old_n_shares) 
 
-            # Money loaned to this event was not actually taken out of the
-            # reserve pool, it was just recorded as being loaned.
-            loan_returned = Decimal(n_to_return / old_n_shares) * event.funding
-            event.funding -= loan_returned
-            self.p.account.borrow_fund.add_loan(-loan_returned, self.currency_kind)
+        rebuy_price_advantage = n * (borrow_event.price - self.price)
+        self.p.account.borrow_fund.add_loan(
+            -rebuy_price_advantage, 
+            self.currency_kind
+        )
 
-            # Change reserve money based on the difference in borrow price and 
-            # rebuy price. To be clear - this is the actual borrow price and 
-            # not the rebuy threshold supported by borrow funding.
-            rebuy_price_advantage = n_to_return * (event.price - self.price)
-            
-            # Money in the event's repayment will be added to the reserve
-            # pool. We will use it in an attempt to offset the loss if
-            # re-buying at a higher price than originally borrowed.
-            if event.n_shares == 0:
-                repayment_returned = event.repay
-            elif rebuy_price_advantage >= 0:
-                repayment_returned = 0
-            else:
-                repayment_returned = min(event.repay, -rebuy_price_advantage)
-            event.repay -= repayment_returned
-            self.p.account.borrow_fund.add_reserves(
-                    rebuy_price_advantage + repayment_returned, 
-                    self.currency_kind)
-
-            if event.n_shares == 0:
-                borrow_events.pop()
-
-        if n_remaining > 0:
-            raise Exception("Not enough borrowed shares to unborrow.")
-
-        self.borrow_events = borrow_events
         self.p.account.currencies[self.currency_kind] -= self.price * n
 
     def unbind_all(self, exclude_horizon=True):

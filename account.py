@@ -60,7 +60,7 @@ class Account:
         n_days = date_diff.days
         self.last_checked = now
 
-        #self.borrow_fund.update()
+        self.borrow_fund.update()
 
         if n_days > 0:
 
@@ -101,7 +101,7 @@ class Account:
 
         for (currency_kind, amount) in daily_borrow_fund_contributions.items():
             d_money = amount * n_days
-            self.borrow_fund.add_income(d_money, currency_kind)
+            self.borrow_fund.add_loan(-d_money, currency_kind)
             self.add_profit(-d_money, currency_kind)
 
 

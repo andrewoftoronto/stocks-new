@@ -1,1 +1,21 @@
-{"currencies": {"cad": 1400.0, "usd": 33816.50999999996}, "profitCounter": {"usd": 207.0926999999997}, "dailyProfitCounter": {"usd": 882.4750999999999}, "borrowFund": {"loanBalance": {"usd": 13809.099000000002}, "promisedShareBalance": {"usd": 13516.149999999996}}, "lastChecked": "2025-10-24T12:01:32.138460-04:00"}
+{
+    "borrowFund": {
+        "loanBalance": {
+            "usd": 13544.588000000002
+        },
+        "promisedShareBalance": {
+            "usd": 13516.149999999996
+        }
+    },
+    "currencies": {
+        "cad": 1400.0,
+        "usd": 68516.50999999995
+    },
+    "dailyProfitCounter": {
+        "usd": 2700.0142000000005
+    },
+    "lastChecked": "2025-10-24T12:01:32.138460-04:00",
+    "profitCounter": {
+        "usd": 1824.6318000000003
+    }
+}

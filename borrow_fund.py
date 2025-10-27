@@ -5,7 +5,7 @@ from util import currency_collection_to_string, subtract_currency_collections, a
 
 
 # When amount owing exceeds this, tax trading profits.
-tax_threshold = {'usd': 0}
+tax_threshold = {'usd': -2000}
 
 # If income fund is below tax threshold, trading profits are taxed at this rate.
 income_tax_rate = 0.1

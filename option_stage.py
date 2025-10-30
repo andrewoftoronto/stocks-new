@@ -85,7 +85,6 @@ class OptionStage(StageBase):
         
         self.o_targets.remove(o_target)
 
-
     def on_update(self, current_price: Decimal, min_margin: Decimal):
 
         # Match existing targets with options.

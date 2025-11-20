@@ -152,6 +152,21 @@ class Shares(BaseShares):
             pair[0] += Decimal(d_price)
         self.sort()
 
+    def scale_prices(self, f_price: Decimal):
+        ''' Scales the prices of all shares by the given factor. '''
+
+        for pair in self.pairs:
+            pair[0] *= Decimal(f_price)
+        self.sort()
+
+    def scale_quantities(self, f_qty: float):
+        ''' Scales the number of shares by the given factor. Note that 
+            reverse-splits can cause rounding errors. '''
+
+        for pair in self.pairs:
+            pair[1]  = int(round(pair[1] * f_qty))
+        self.sort()
+
     def distribute_value(self, amount: Decimal):
         ''' Distribute value evenly to the shares. '''
 

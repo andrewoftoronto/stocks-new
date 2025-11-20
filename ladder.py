@@ -313,6 +313,18 @@ class Ladder(StageBase):
             for rung in rungs:
                 rung.disabled = False
 
+    def rescale_rung_prices(self, scale_factor):
+        ''' Rescale the prices of the rungs in this ladder. '''
+
+        for (rung_def, rungs) in self.def_to_rungs.items():
+            for (i, rung) in enumerate(rungs):
+                rung.start_price = rung.start_price * Decimal(scale_factor)
+                rung.lowest_price = rung.start_price * Decimal(scale_factor)
+                rung.target.sell_price = rung.target.sell_price * Decimal(scale_factor)
+                rung.target.max_buy_price = rung.target.max_buy_price * Decimal(scale_factor)
+                rung.target.min_buy_price = rung.target.min_buy_price * Decimal(scale_factor)
+
+
     def scale_profit_levels(self, scale_factor:float, min_margin:Decimal):
         ''' Scale profit levels of rung targets according to scale factor. '''
 

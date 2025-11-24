@@ -608,7 +608,7 @@ class Asset:
             n_borrows += borrow_event.n_shares
         return n_borrows
 
-    def borrow(self, n, cost, rebuy_percent=None):
+    def borrow(self, n, rebuy_percent=None, cost=None):
         ''' Borrow n shares at the current price. Physically selling them 
             while keeping them on as "virtual shares". 
             
@@ -619,12 +619,12 @@ class Asset:
         self.fixup_price()
 
         if rebuy_percent is None:
-            if 0 < cost:
-                rebuy_percent = 30
-            else:
-                rebuy_percent = 0
+            raise Exception("No rebuy percent provided")
 
         rebuy_at = self.price + self.price * Decimal(rebuy_percent) / 100
+
+        if cost is None:
+            cost = (rebuy_at - self.price) * n
 
         now = datetime.now()
         tz = pytz.timezone('America/New_York')

@@ -28,7 +28,7 @@ class BorrowEvent:
         }
     
     def __repr__(self):
-        return (f"[rebuyAt: {self.rebuy_at:.2f}, price: {self.price:.2f}, " +
+        return (f"[rebuyAt: {self.rebuy_at:.2f}, origPrice: {self.price:.2f}, " +
             f"nShares: {self.n_shares}, date: {self.date}, " +
             f"cost: {self.cost:.2f}]")
     

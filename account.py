@@ -7,7 +7,7 @@ from borrow_fund import new_borrow_fund_from_dict
 from zoneinfo import ZoneInfo
 
 
-daily_borrow_fund_contributions = {'usd': 20}
+daily_borrow_fund_contributions = {'usd': 50}
 
 
 class Account:

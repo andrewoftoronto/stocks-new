@@ -285,6 +285,9 @@ class Asset:
         ''' Scores how urgent it is to fill up the horizon fund for the 
             collateral alone. '''
         
+        # Skip this stuff for now.
+        return 0
+
         # How close we are to fulfilling the weekly goal.
         contracts_written = 0
         today = datetime.today()

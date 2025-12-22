@@ -5,6 +5,7 @@ from target import Target, new_target_from_dict
 from util import to_dict
 from option import Option
 from math import ceil
+from copy import copy
 
 
 # Penalty to apply to the estimated sell price of an option due to certain
@@ -68,6 +69,46 @@ class OptionStage(StageBase):
 
         targetReports = ','.join(targetReports)
         return f"OptionStage[targets:[{targetReports}]]"
+
+    def sell_target(self, target_to_sell):
+        ''' Sell shares allocated to a literal share target. '''
+
+        o_target = None
+        for check_o_target in self.o_targets:
+            for target in check_o_target.targets:
+                if target == target_to_sell:
+                    o_target = check_o_target
+        
+        if o_target is None:
+            raise Exception("unable to find option target")
+        
+        self.asset.regenerate_targets()
+        report = self.asset.distribute()
+        
+        assignment = report.target_to_assignment[target_to_sell]
+        shares = assignment.shares.as_split([self.asset.price])[0]
+        self.asset.shares[1] -= shares
+
+        profit = assignment.shares.compute_profit(self.asset.price)
+        check_o_target.option.upgrade_funding += profit
+        check_o_target.targets.remove(target_to_sell)
+
+        self.asset.regenerate_targets()
+        report = self.asset.distribute()
+
+    def sell_all_targets(self, option):
+        ''' Sell shares allocated to all targets related to an option. '''
+
+        o_target = None
+        for iter_o_target in self.o_targets:
+            if iter_o_target.option == option:
+                o_target = iter_o_target
+
+        targets = copy(o_target.targets)
+        print(f"Targets: {targets}")
+        for target in targets:
+            print(f"Selling {target}")
+            self.sell_target(target)
 
     def on_option_sold(self, option: Option):
         ''' Call when an option has been fully sold off. '''

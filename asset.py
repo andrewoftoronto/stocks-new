@@ -194,6 +194,14 @@ class Asset:
         self.cached_target_to_assignment = report.target_to_assignment
         return report
 
+    def regenerate_targets(self):
+        targets = []
+        for stage in self.stages:
+            targets += stage.generate_targets()
+        targets = sorted(targets, key=lambda t: t.sell_price)
+        self.cached_targets = targets
+        return targets
+
     def update_strat(self):
         ''' Update strategy around this asset based on the current price. This
             will not buy or sell shares, just recommend some to buy or to sell. 
@@ -218,12 +226,9 @@ class Asset:
                 sold_shares += assignment.shares
 
         # Update stages and generate targets from them.
-        targets = []
         for stage in self.stages:
             stage.on_update(self.price, MIN_SELL_GAIN)
-            targets += stage.generate_targets()
-        targets = sorted(targets, key=lambda t: t.sell_price)
-        self.cached_targets = targets
+        targets = self.regenerate_targets()
 
         # Try to fund horizon targets.
         horizon_targets = filter(lambda t: t.horizon_request_id is not None, targets)

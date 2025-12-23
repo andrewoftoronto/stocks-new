@@ -7,7 +7,7 @@ from borrow_fund import new_borrow_fund_from_dict
 from zoneinfo import ZoneInfo
 
 
-daily_borrow_fund_contributions = {'usd': 50}
+daily_borrow_fund_contributions = {'usd': 20}
 
 
 class Account:
@@ -99,10 +99,28 @@ class Account:
         self.add_profit(-decay_cost)
         print(f"Daily Decay Cost: {(decay_cost / n_days):.2f}")
 
+        # Contribute to the borrow fund.
         for (currency_kind, amount) in daily_borrow_fund_contributions.items():
             d_money = amount * n_days
             self.borrow_fund.add_loan(-d_money, currency_kind)
             self.add_profit(-d_money, currency_kind)
+
+        # Tick borrow prices up that are (or close to being) due.
+        borrow_adjust_cost = Decimal(0)
+        for asset in self.pf.assets:
+            for borrow_event in asset.borrow_events:
+
+                # Don't affect borrow events still far ahead in price.
+                if asset.price * Decimal(1.05) < borrow_event.rebuy_at:
+                    continue
+
+                share_price_change = borrow_event.rebuy_at * Decimal(0.0015)
+                borrow_event.rebuy_at += share_price_change * n_days
+
+                d_money = share_price_change * borrow_event.n_shares * n_days
+                borrow_adjust_cost += d_money
+        self.add_profit(-borrow_adjust_cost)
+        print(f"Borrow Adjust Cost: {borrow_adjust_cost / n_days:.2f}")
 
 
 def new_account_from_dict(dict, context: SerializeContext):

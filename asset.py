@@ -1,6 +1,6 @@
 from copy import deepcopy
 from decimal import Decimal
-from math import ceil
+from math import ceil, floor
 from datetime import datetime, timedelta
 import pytz
 from util import to_dict, penny_round, currency_collection_get
@@ -87,6 +87,8 @@ class Asset:
 
         self.margin_requirement = margin_requirement
 
+        self.borrow_raise_fund = Decimal(0)
+
     def to_dict(self, context: SerializeContext):
         self.fixup_price()
 
@@ -109,7 +111,8 @@ class Asset:
             "dailyDecayFactor": self.daily_decay_factor,
             "baseChange": Decimal(self.base_change),
             "profitDestOverrides": to_dict(self.profit_dest_overrides, context),
-            "marginRequirement": self.margin_requirement
+            "marginRequirement": self.margin_requirement,
+            'borrowRaiseFund': self.borrow_raise_fund,
         }
 
     def save(self, file_name: str):
@@ -464,6 +467,17 @@ class Asset:
             if o.value < 0.01:
                 self.profit_dest_overrides.pop(0)
 
+        # Distribute a portion of remaining profit for raising back up borrow
+        # events.
+        n_borrows, borrow_events = self.find_low_borrows()
+
+        if 0 < n_borrows:
+            contribution = penny_round(Decimal(max(1.0, 0.2 * float(remaining_profit))))
+            remaining_profit -= contribution
+            self.borrow_raise_fund += contribution
+            self.payout_borrow_raise_fund(n_borrows, self.borrow_events)
+            print(f"Adding {contribution:.2f} to borrow_raise_fund.") 
+
         # Distribute a portion of remaining profit as tax if below the tax 
         # threshold.
         if self.p.account.borrow_fund.is_taxed(self.currency_kind):
@@ -480,6 +494,28 @@ class Asset:
         self.history.append(HistoryItem(datetime.now(), f"Sold {to_sell}", len(self)))
 
         return to_sell
+
+    def find_low_borrows(self):
+        n_borrows = 0
+        borrow_events = []
+        for borrow_event in self.borrow_events:
+            if borrow_event.rebuy_at < self.price * Decimal(1.05):
+                n_borrows += borrow_event.n_shares
+                borrow_events.append(borrow_event)
+        return n_borrows, borrow_events
+
+    def payout_borrow_raise_fund(self, n_borrows=None, borrow_events=None):
+        n_borrows, borrow_events = self.find_low_borrows()
+
+        cents_per_share = floor(self.borrow_raise_fund * 100 / n_borrows)
+        print(f"Paying out {cents_per_share} cents per share.")
+        if cents_per_share == 0:
+            return
+
+        dollars_per_share = Decimal(cents_per_share / 100.0)
+        for borrow_event in borrow_events:
+            borrow_event.rebuy_at += dollars_per_share
+        self.borrow_raise_fund -= dollars_per_share * n_borrows
 
     def write_option(self, mode, date, strike_price, n_contracts, 
             price) -> WriteOption:
@@ -878,6 +914,7 @@ class Asset:
         self.daily_decay_factor = Decimal(dict["dailyDecayFactor"])
 
         self.margin_requirement = Decimal(dict["marginRequirement"])
+        self.borrow_raise_fund = Decimal(dict["borrowRaiseFund"])
 
         context.asset = None
 

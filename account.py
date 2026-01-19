@@ -5,6 +5,7 @@ from util import to_dict, currency_collection_to_string, penny_round, add_to_cur
 from serialize_context import SerializeContext
 from borrow_fund import new_borrow_fund_from_dict
 from zoneinfo import ZoneInfo
+from math import ceil
 
 
 daily_borrow_fund_contributions = {'usd': 20}
@@ -114,7 +115,7 @@ class Account:
                 if asset.price * Decimal(1.05) < borrow_event.rebuy_at:
                     continue
 
-                share_price_change = borrow_event.rebuy_at * Decimal(0.0015)
+                share_price_change = penny_round(borrow_event.rebuy_at * Decimal(0.0003), fn=ceil)
                 borrow_event.rebuy_at += share_price_change * n_days
 
                 d_money = share_price_change * borrow_event.n_shares * n_days

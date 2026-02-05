@@ -2,15 +2,14 @@ from typing import List, Dict
 from decimal import Decimal
 from math import ceil
 from target import Target
-from shares import Shares, pair_n_needed_for_profit
-from assignment import Assignment
+from shares import Shares, new_empty_shares, new_shares_from_raw, pair_n_needed_for_profit
 from search_helper import binary_search, exponential_binary_search
 
 
 class DistributionReport:
     ''' Report on distributing shares to targets. '''
 
-    def __init__(self, target_to_assignment: Dict[Target, Assignment], 
+    def __init__(self, target_to_assignment: Dict[Target, Shares], 
             unbound_shares: Shares, all_satisfied: bool, 
             buyables_satisfied: bool, buys_needed: int=None):
         self.target_to_assignment = target_to_assignment
@@ -29,7 +28,7 @@ class DistributionReport:
         self.buys_needed = buys_needed
 
 
-def distribute(shares: Shares, targets: List[Target], current_price: Decimal,
+def distribute(shares: Shares, targets: List[Target], current_price,
         min_margin: float) -> DistributionReport:
     ''' Distribute the given shares to the given targets, returning a set of
         share->target assignments and a set of unbound shares.
@@ -38,13 +37,17 @@ def distribute(shares: Shares, targets: List[Target], current_price: Decimal,
         lower priced shares in favour of higher priced ones when it would make
         sense.
     '''
+    print("TARGETS", targets)
 
     first_report = distribute_pass(shares, targets, current_price, min_margin)
     if not first_report.buyables_satisfied:
 
         # We need to buy more shares.
         def callback(n_try_buy):
-            try_shares = shares + [current_price, n_try_buy]
+            try_shares = shares + new_shares_from_raw(
+                [[current_price.unit_value, n_try_buy]],
+                currency_kind=current_price.unit_kind
+            )
             report = distribute_pass(try_shares, targets, current_price, 
                 min_margin)
             return not report.buyables_satisfied
@@ -80,51 +83,58 @@ def distribute(shares: Shares, targets: List[Target], current_price: Decimal,
         return first_report
 
 
-def distribute_pass(shares: Shares, targets: List[Target], current_price: Decimal,
+def distribute_pass(shares: Shares, targets: List[Target], current_price,
         min_margin: float) -> DistributionReport:
     ''' A single pass of the distribute algorithm. Attempts to assign the given
         shares to all targets, starting from the bottom-most target and the 
         cheapest shares. '''
+    currency_kind = current_price.unit_kind
 
     targets = sorted(targets, key=lambda t: (t.max_buy_price, t.sell_price))
     target_to_assignment = {}
+    target_to_assigned_profit = {}
 
     remaining_shares = shares.clone()
     all_satisfied = True
     buyables_satisfied = True
     for target in targets:
 
-        assignment = Assignment(target, Shares(), 0)
+        assignment = new_empty_shares(currency_kind)
         target_to_assignment[target] = assignment
-        skip_shares = Shares()
+        target_to_assigned_profit[target] = 0
+        skip_shares = new_empty_shares(currency_kind)
         while 0 < len(remaining_shares):
 
-            if target.profit <= assignment.profit:
+            if target.profit.unit_value <= target_to_assigned_profit[target]:
                 break
 
             pair = remaining_shares.pairs[0]
+            print(f"Considering {pair}")
             min_buy_price = min(target.min_buy_price, current_price)
-            if target.max_buy_price < pair[0]:
+            if target.max_buy_price.unit_value < pair[0]:
 
                 # This pair is ineligible to satisfy this target and so would any
                 # more expensive shares.
                 break
 
-            elif pair[0] < min_buy_price:
+            elif pair[0] < min_buy_price.unit_value:
                 skip_shares += pair
                 remaining_shares.pairs = remaining_shares.pairs[1:]
                 continue
 
             chosen_pair = pair
 
-            profit_needed = target.profit - assignment.profit
+            profit_needed = (target.profit.unit_value - target_to_assigned_profit[target])
             n_shares, profit = pair_n_needed_for_profit(chosen_pair, profit_needed,
-                    target.sell_price, target.min_buy_price, min_margin)
+                    target.sell_price.unit_value, target.min_buy_price.unit_value, min_margin)
             if 0 < n_shares:
-                taken_shares = [chosen_pair[0], n_shares]
+                taken_shares = new_shares_from_raw(
+                    [[chosen_pair[0], n_shares]], 
+                    currency_kind=currency_kind
+                )
                 remaining_shares -= taken_shares
-                assignment.profit += profit
-                assignment.shares += taken_shares
+                target_to_assigned_profit[target] += profit
+                target_to_assignment[target] += taken_shares
             elif n_shares == 0:
                 print("Error diagnostics:")
                 print("  Chosen Pair:", chosen_pair)
@@ -132,7 +142,7 @@ def distribute_pass(shares: Shares, targets: List[Target], current_price: Decima
 
         remaining_shares += skip_shares
 
-        if assignment.profit < target.profit:
+        if target_to_assigned_profit[target] < target.profit.unit_value:
 
             # buyables_satisfied is only set to false if it is possible to buy 
             # more shares to satisfy the target.

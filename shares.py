@@ -152,6 +152,12 @@ class Shares(BaseShares):
             pair[0] += Decimal(d_price)
         self.sort()
 
+    def shift_bottom(self, d_price: Decimal, n_bottom: int):
+        x = self.bottom(n_bottom)
+        self -= x
+        x.shift_prices(d_price)
+        self += x
+
     def scale_prices(self, f_price: Decimal):
         ''' Scales the prices of all shares by the given factor. '''
 
@@ -208,9 +214,14 @@ class Shares(BaseShares):
         ''' Adds the given other shares to this to create a new Shares. '''
 
         result = self.clone()
+        return result.__iadd__(other_in)
+    
+    def __iadd__(self, other_in) -> Self:
+        ''' Adds the given other shares to this to create a new Shares. '''
+
         other_pairs = convert_to_pairs(other_in)
-        merge_pairs(result.pairs, other_pairs)
-        return result
+        merge_pairs(self.pairs, other_pairs)
+        return self
     
     def __sub__(self, other_in) -> Self:
         ''' Returns a new Shares that is the result of removing all shares from
@@ -219,10 +230,15 @@ class Shares(BaseShares):
         '''
 
         result = self.clone()
+        return result.__isub__(other_in)
+    
+    def __isub__(self, other_in) -> Self:
+        ''' Subtract other from this. '''
+
         other_pairs = convert_to_pairs(other_in)
 
         for pair in other_pairs:
-            existing_pair = get_pair(result.pairs, pair[0])
+            existing_pair = get_pair(self.pairs, pair[0])
             if existing_pair is None:
                 raise Exception(f"Missing price being removed: {pair[0]}")
             if existing_pair[1] < pair[1]:
@@ -230,9 +246,9 @@ class Shares(BaseShares):
             
             existing_pair[1] -= pair[1]
 
-        prune_zeros(result.pairs)
-        return result
-    
+        prune_zeros(self.pairs)
+        return self
+
     def top_profit(self, profit: Decimal, sell_price: Decimal, 
             min_buy_price: Decimal, 
             min_margin: Decimal=Decimal(1.0)) -> tuple[Self, Decimal]:

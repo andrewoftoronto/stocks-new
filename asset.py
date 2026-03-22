@@ -89,6 +89,10 @@ class Asset:
 
         self.borrow_raise_fund = Decimal(0)
 
+    def clear_cache(self):
+        self.cached_target_to_assignment = None
+        self.cached_targets = []
+
     def to_dict(self, context: SerializeContext):
         self.fixup_price()
 

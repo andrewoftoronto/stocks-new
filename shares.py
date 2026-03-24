@@ -158,6 +158,12 @@ class Shares(BaseShares):
         x.shift_prices(d_price)
         self += x
 
+    def shift_top(self, d_price: Decimal, n_top: int):
+        x = self.top(n_top)
+        self -= x
+        x.shift_prices(d_price)
+        self += x
+
     def scale_prices(self, f_price: Decimal):
         ''' Scales the prices of all shares by the given factor. '''
 

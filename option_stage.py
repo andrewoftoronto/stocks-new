@@ -183,6 +183,7 @@ class OptionStage(StageBase):
                 matching_target.profit_level = Decimal(ceil(float(needed_profit_level) / 50) * 50 + 200)
 
             needed = matching_target.profit_level - already_accounted - matching_target.option.upgrade_funding
+            print("Est Opt Sell Price", est_opt_sell_price)
             if upgrade_target is not None and needed > 10:
                 name = "option-upgrade"
                 sell_price = upgrade_asset_sell_price

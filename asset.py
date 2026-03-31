@@ -948,6 +948,7 @@ def write_target_log(target, target_to_assignment) -> str:
     log = (f"${target.sell_price:.2f} ({target.name}) - Profit: " + 
             f"{assignment_profit:.2f}/{target.profit:.2f}; " +
             f"Max: {penny_round(target.max_buy_price):.2f}; " +
+            f"Min: {penny_round(target.min_buy_price):.2f}; " +
             f"Shares: {assignment_shares}")
     return log
 

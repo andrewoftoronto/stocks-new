@@ -16,7 +16,7 @@ class DistributionReport:
         self.target_to_assignment = target_to_assignment
         self.unbound_shares = unbound_shares
 
-        # Wether all targets are satisfied.
+        # Whether all targets are satisfied.
         self.all_satisfied = all_satisfied
 
         # Whether all targets that can be satisfied by buying at the current
@@ -53,7 +53,7 @@ def distribute(shares: Shares, targets: List[Target], current_price: Decimal,
         # that the function returns false.
         n_to_buy = exponential_binary_search(callback, 0, 32) + 1
         first_report.buys_needed = n_to_buy
-        return first_report
+        report = first_report
     
     elif first_report.all_satisfied and len(first_report.unbound_shares) > 0:
         
@@ -68,16 +68,17 @@ def distribute(shares: Shares, targets: List[Target], current_price: Decimal,
         n_sell = binary_search(callback, 0, len(shares))
 
         if n_sell == 0:
-            return first_report
+            report = first_report
         else:
             held_out_shares = shares.bottom(n_sell)
             retained_shares = shares - held_out_shares
             report = distribute_pass(retained_shares, targets, current_price, 
                     min_margin)
             report.unbound_shares += held_out_shares
-            return report
     else:
-        return first_report
+        report = first_report
+
+    return report
 
 
 def distribute_pass(shares: Shares, targets: List[Target], current_price: Decimal,

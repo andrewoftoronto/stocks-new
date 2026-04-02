@@ -264,6 +264,7 @@ class Asset:
 
         self.recommended_buy = None
         self.recommended_sell = None
+        self.all_targets_satisfied = report.all_satisfied
         if report.buys_needed is not None and 0 < report.buys_needed:
             self.recommended_buy = report.buys_needed
             self.recommended_sell = sold_shares
@@ -406,7 +407,9 @@ class Asset:
         else:
             print("No action taken")
 
-        self.distribute()
+        report = self.distribute()
+        if not report.all_satisfied:
+            print("WARNING: Not all targets satisfied")
 
     def buy(self, n=None, group:int=None, do_checkpoint: bool=True):
         ''' Buy n shares. If n is left None, this will buy the recommended

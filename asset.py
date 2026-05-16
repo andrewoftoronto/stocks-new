@@ -801,7 +801,7 @@ class Asset:
         decay_fn = lambda x: decay(x, self.daily_decay_factor, n_days)
         return decay_fn
 
-    def apply_decay(self, n_days=None):
+    def apply_decay(self, n_days=None, borrow_threshold=None):
         ''' Apply stock price decay to account for leveraged ETF price decay
             over time relative to the underlying index.
 
@@ -831,6 +831,9 @@ class Asset:
         borrow_decay = Decimal(0)
         for (i, e) in enumerate(self.borrow_events):
             old_price = e.rebuy_at
+            if borrow_threshold is not None and old_price <= borrow_threshold:
+                continue
+
             e.rebuy_at = penny_round(decay_fn(e.rebuy_at))
             borrow_decay += (old_price - e.rebuy_at) * e.n_shares
 

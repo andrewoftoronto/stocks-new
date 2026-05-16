@@ -93,9 +93,12 @@ class Account:
         print(f"Daily Option Depreciation: {daily_depreciation:.2f}")
 
         # Account for share price decay, reducing profit.
+        # Borrows below threshold will not be decayed, later logic will actually
+        # increase them.
+        borrow_threshold = asset.price * Decimal(1.05)
         decay_cost = Decimal(0)
         for asset in self.pf.assets:
-            asset_decay_cost = asset.apply_decay(n_days)
+            asset_decay_cost = asset.apply_decay(n_days, borrow_threshold=borrow_threshold)
             decay_cost += asset_decay_cost
         self.add_profit(-decay_cost)
         print(f"Daily Decay Cost: {(decay_cost / n_days):.2f}")
@@ -112,7 +115,7 @@ class Account:
             for borrow_event in asset.borrow_events:
 
                 # Don't affect borrow events still far ahead in price.
-                if asset.price * Decimal(1.05) < borrow_event.rebuy_at:
+                if borrow_threshold < borrow_event.rebuy_at:
                     continue
 
                 share_price_change = penny_round(borrow_event.rebuy_at * Decimal(0.0003), fn=ceil)

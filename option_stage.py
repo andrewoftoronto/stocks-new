@@ -233,6 +233,7 @@ class OptionStage(StageBase):
         targets = []
         for o_target in self.o_targets:
             targets += o_target.targets
+        print("Generated targets dickhead")
         return targets
     
     def on_horizon_filled(self, _):

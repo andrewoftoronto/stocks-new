@@ -177,6 +177,7 @@ class Asset:
         borrow_str += "]" 
 
         summary = ""
+        #print(list(log_targets))
         for target in log_targets:
             log = write_target_log(target, self.cached_target_to_assignment)
             summary += f"{log}\n"
@@ -185,7 +186,11 @@ class Asset:
         summary += f"Borrows: {borrow_str}\n"
         summary += str(self)
 
-        print(summary)
+        for line in summary.splitlines():
+            chunk_size = 100
+            chunks = [line[i:i + chunk_size] for i in range(0, len(line), chunk_size)]
+            for chunk in chunks:
+                print(chunk)
 
     def distribute(self, all_shares=None) -> DistributionReport:
         ''' Distribute shares among the current targets. This recomputes which

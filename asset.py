@@ -675,7 +675,7 @@ class Asset:
         self.fixup_price()
 
         if rebuy_percent is None:
-            raise Exception("No rebuy percent provided")
+            raise Exception("No rebuy_percent provided")
 
         rebuy_at = self.price + self.price * Decimal(rebuy_percent) / 100
 

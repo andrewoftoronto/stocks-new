@@ -138,6 +138,9 @@ class Portfolio:
         
         return borrow_funds
 
+    def reset_profit(self):
+        self.account.reset_profit()
+
     def add_profit(self, change: Decimal, currency='usd'):
         self.account.add_profit(change, currency)
 

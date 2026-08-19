@@ -118,7 +118,7 @@ class Account:
                 if borrow_threshold < borrow_event.rebuy_at:
                     continue
 
-                share_price_change = penny_round(borrow_event.rebuy_at * Decimal(0.0003), fn=ceil)
+                share_price_change = penny_round(borrow_event.rebuy_at * Decimal(0.0002), fn=ceil)
                 borrow_event.rebuy_at += share_price_change * n_days
 
                 d_money = share_price_change * borrow_event.n_shares * n_days

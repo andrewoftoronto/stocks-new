@@ -483,20 +483,6 @@ class Asset:
         # events.
         n_borrows, borrow_events = self.find_low_borrows()
 
-        if 0 < n_borrows:
-            contribution = penny_round(Decimal(max(1.0, 0.2 * float(remaining_profit))))
-            remaining_profit -= contribution
-            self.borrow_raise_fund += contribution
-            self.payout_borrow_raise_fund(n_borrows, self.borrow_events)
-            print(f"Adding {contribution:.2f} to borrow_raise_fund.") 
-
-        # Distribute a portion of remaining profit as tax if below the tax 
-        # threshold.
-        if self.p.account.borrow_fund.is_taxed(self.currency_kind):
-            contribution = Decimal(income_tax_rate * float(remaining_profit))
-            remaining_profit -= contribution
-            self.p.account.borrow_fund.add_loan(-contribution, self.currency_kind)
-
         # Distribute a portion to stages.
         for stage in self.stages:
             remaining_profit = stage.tax_profits(remaining_profit)

@@ -171,7 +171,7 @@ class OptionStage(StageBase):
             # accounted for in targets.
             already_accounted = Decimal(0)
             for target in matching_target.targets:
-                target.min_buy_price = min(target.min_buy_price, current_price)
+                target.min_buy_price = min(target.min_buy_price, current_price / Decimal(1.05))
                 already_accounted += Decimal(target.profit)
 
             # Compute how much profit is needed to satisfy the option-target.
